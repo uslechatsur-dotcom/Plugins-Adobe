@@ -32,7 +32,7 @@ vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../hosts/cep/jsx/host.j
   const log = [];
   await p.exposeFunction('__evalScript', (script) => { log.push(script.slice(0, 40)); try { return String(vm.runInContext(script, ctx)); } catch (e) { return 'EvalScript error.'; } });
   await p.addInitScript(() => { window.__adobe_cep__ = { evalScript: (s, cb) => window.__evalScript(s).then(cb) }; });
-  await p.goto('file://' + path.resolve(__dirname, '../dist/cep/index.html'));
+  await p.goto('file://' + process.env.CEP_INDEX || path.resolve(__dirname, '../dist/cep/index.html'));
   await p.waitForFunction(() => window.LG.app && (Object.keys(window.LG.app.S.ch).length || window.LG.app.S.error), null, { timeout: 5000 });
 
   const st = await p.evaluate(() => { const S = window.LG.app.S; return { host: S.host.name, ids: S.order, fps: S.fps, ph: S.playhead, clip: S.clip }; });

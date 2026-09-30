@@ -2,3 +2,4 @@ node_modules/
 *.ccx
 *.zxp
 curve-editor/dist/
+curve-editor/release/
