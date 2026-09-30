@@ -1,9 +1,10 @@
 {
   "name": "legolas-plus-curve-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Curve editor panel (UXP) for Adobe Premiere Pro",
   "scripts": {
-    "test": "node test/engine.test.js && node test/ui.test.js"
+    "build": "node scripts/build.js",
+    "test": "node scripts/build.js && node test/engine.test.js && node test/ui.test.js && node test/cep.test.js"
   }
 }

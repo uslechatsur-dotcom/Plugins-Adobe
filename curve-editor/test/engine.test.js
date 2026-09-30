@@ -1,7 +1,7 @@
 const assert = require('assert');
-const E = require('../js/easing');
-const K = require('../js/bake');
-const A = require('../js/animations');
+const E = require('../src/js/easing');
+const K = require('../src/js/bake');
+const A = require('../src/js/animations');
 let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok', name); };
 
 t('all presets hit 0 and 1', () => E.PRESETS.forEach((p) => {

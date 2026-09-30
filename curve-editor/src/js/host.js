@@ -1,11 +1,9 @@
-/* Host adapters. `premiere` talks to the UXP `premierepro` module; `mock` is an in-memory
- * stand-in used when the panel is opened in a plain browser (dev / tests / screenshots).
+/* Host adapters — the panel only ever talks to this interface:
+ *   scan()             -> { clip, fps, playhead, channels:[{id,name,group,dims,ref,keys:[{time,value}]}] }
+ *   apply(edits,label) -> writes edits:[{id, keys:[{time,value}]}] (replaces each channel's keyframes)
  *
- * Common interface (all async):
- *   scan()            -> { clip, fps, playhead, channels:[{id,name,group,dims,ref,keys:[{time,value}]}] }
- *   apply(edits,label)-> writes  edits:[{id, keys:[{time,value}]}]  (replaces the channel's keyframes)
- *   addKey(id,time)   -> adds a keyframe holding the current value
- */
+ * `premiere` = UXP (`premierepro` module), `cep` = CEP extension (ExtendScript via evalScript),
+ * `mock` = in-memory stand-in when opened in a plain browser (dev / tests / screenshots). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else (root.LG = root.LG || {}).host = factory();
@@ -90,17 +88,24 @@
       if (errors.length) throw new Error(errors.join('; '));
     }
 
-    async function addKey(id, time) {
-      const h = handles.get(id);
-      if (!h) return;
-      const { project, param } = h;
-      const cur = unwrap(await param.getValueAtTime(T(time)));
-      project.lockedAccess(() => project.executeTransaction((ca) => {
-        const kf = param.createKeyframe(cur); kf.position = T(time); ca.addAction(param.createAddKeyframeAction(kf));
-      }, 'Add keyframe'));
-    }
+    return { name: 'Premiere Pro · UXP', scan, apply, live: true };
+  }
 
-    return { name: 'Premiere Pro', scan, apply, addKey, live: true };
+  // ------------------------------------------------------------------ CEP (ExtendScript)
+  function cep(bridge) {
+    let node = null;      // nodeId of the scanned clip, so apply() edits the same clip even if the selection moved
+    const run = (fn, arg) => new Promise((resolve, reject) => {
+      const call = 'LG_' + fn + '(' + (arg === undefined ? '' : JSON.stringify(JSON.stringify(arg))) + ')';
+      bridge.evalScript(call, (raw) => {
+        let r; try { r = JSON.parse(raw); } catch (_) { return reject(new Error('ExtendScript: ' + raw)); }
+        r && r.ok ? resolve(r) : reject(new Error((r && r.error) || 'ExtendScript error'));
+      });
+    });
+    return {
+      name: 'Premiere Pro · CEP', live: true,
+      async scan() { const r = await run('scan'); node = r.node; return r; },
+      async apply(edits, label) { await run('apply', { node, label, edits }); },
+    };
   }
 
   // ------------------------------------------------------------------ Mock (browser / tests)
@@ -120,14 +125,14 @@
       name: 'Preview (no Premiere)', live: false, state,
       async scan() { return { clip: 'demo_clip.mp4', fps, playhead: state.playhead, channels: copy(state.channels) }; },
       async apply(edits) { edits.forEach((e) => { const c = state.channels.find((x) => x.id === e.id); if (c) c.keys = copy(e.keys); }); },
-      async addKey(id, time) { const c = state.channels.find((x) => x.id === id); if (!c) return; c.keys.push({ time, value: copy(c.keys[c.keys.length - 1].value) }); c.keys.sort((a, b) => a.time - b.time); },
     };
   }
 
   function detect() {
+    if (typeof window !== 'undefined' && window.__adobe_cep__ && typeof window.__adobe_cep__.evalScript === 'function') return cep(window.__adobe_cep__);
     try { if (typeof require === 'function') { const p = require('premierepro'); if (p) return premiere(p); } } catch (_) { /* not in UXP */ }
     return mock();
   }
 
-  return { premiere, mock, detect };
+  return { premiere, cep, mock, detect };
 });

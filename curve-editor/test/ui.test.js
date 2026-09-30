@@ -6,7 +6,7 @@ const path = require('path'); const assert = require('assert');
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const p = await b.newPage({ viewport: { width: 760, height: 560 } });
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
-  await p.goto('file://' + path.resolve(__dirname, '../index.html'));
+  await p.goto('file://' + path.resolve(__dirname, '../src/index.html'));
   await p.waitForFunction(() => window.LG.app && Object.keys(window.LG.app.S.ch).length);
   const S = () => p.evaluate(() => { const s = window.LG.app.S; return { order: s.order, vis: [...s.visible], sel: [...s.sel], ch: s.order.map((id) => ({ id, keys: s.ch[id].keys.length, segs: s.ch[id].segs })) }; });
   const shot = (n) => shots && p.screenshot({ path: path.join(shots, n + '.png') });

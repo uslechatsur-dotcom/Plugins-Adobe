@@ -1,50 +1,71 @@
-# Legolas+ Curve Editor — panneau UXP pour Premiere Pro
+# Legolas+ Curves — éditeur de courbes pour Premiere Pro
 
-Éditeur de courbes façon After Effects pour Premiere Pro (≥ 25.6), en 3 onglets :
+Panneau d'éditeur de courbes façon After Effects, livré en **deux versions** générées depuis le même code :
 
-| Onglet | Ce qu'il fait |
-|---|---|
-| **Curves** | Graphe des propriétés animées du clip sélectionné (Position, Échelle, Rotation, Opacité…). Sélection multi-canaux, poignées bézier déplaçables, ~28 presets d'easing (Ease, Cubic, Quart, Expo, Back, Bounce, Elastic, Hold…), slider *Strength*, presets personnalisés (★), double-clic = ajouter un keyframe sans changer la forme de la courbe, molette = zoom, glisser = déplacer la vue. |
-| **Keyframes** | Dopesheet : tous les canaux en lignes, déplacement des keyframes (sélection au rectangle avec Maj), suppression (Suppr). |
-| **Animations** | Bounce, Elastic, Overshoot, Wiggle, Shake, Pulse, Spiral, Orbit — aperçu animé, réglages Cycles / Height / Damping / Duration / Variation, bouton **Apply at playhead** sur le canal choisi. |
+| Version | Pour | Où dans Premiere |
+|---|---|---|
+| **Extension CEP** (`dist/cep`) | Premiere Pro 2020 → 2025 (ExtendScript) | Fenêtre → Extensions → *Legolas+ Curves* |
+| **Panneau UXP** (`dist/uxp`) | Premiere Pro 25.6+ | Fenêtre → Plug-ins UXP → *Legolas+ Curves* |
 
-Barre d'outils : ↻ rescanner · ★ enregistrer l'easing · ◆+ keyframe au playhead · ✕ supprimer · annuler/rétablir · **LIVE** (écriture dans Premiere pendant l'édition).
+## Fonctions
 
-## Installation (développement)
+- **Curves** — graphe des propriétés animées du clip sélectionné, poignées bézier, ~28 presets d'easing
+  (Ease, Sine, Cubic, Quart, Expo, Circ, Back, Bounce, Elastic, Hold…), slider *Strength*, presets
+  personnalisés (★, clic droit pour supprimer), double-clic = ajouter un keyframe sans changer la forme,
+  molette = zoom, glisser = déplacer la vue, `F` = tout afficher.
+- **Keyframes** — dopesheet : déplacer les keyframes, sélection au rectangle (Maj), suppression (Suppr).
+- **Animations** — Bounce, Elastic, Overshoot, Wiggle, Shake, Pulse, Spiral, Orbit avec aperçu animé et
+  réglages Cycles / Height / Damping / Duration / Variation, appliqués au playhead.
+- Annuler / rétablir, mode **Live** (écrit dans Premiere pendant l'édition).
 
-1. Installer **UXP Developer Tool** (Creative Cloud Desktop → Tous les apps).
-2. Premiere Pro ≥ 25.6 lancé, ouvrir une séquence.
-3. UXP Developer Tool → *Add Plugin* → choisir `curve-editor/manifest.json` → *Load*.
-4. Premiere : **Fenêtre → Plugins UXP → Legolas+ Curves**.
-5. Sélectionner un clip qui a déjà des keyframes, cliquer ↻.
+## Build
+
+```
+cd curve-editor
+node scripts/build.js        # -> dist/cep  et  dist/uxp
+```
+
+## Installer l'extension CEP
+
+```
+macOS   :  ./scripts/install-cep.sh
+Windows :  scripts\install-cep.bat
+```
+Le script copie l'extension dans le dossier CEP de l'utilisateur et active `PlayerDebugMode`
+(nécessaire pour charger une extension non signée). Redémarrer Premiere, puis
+**Fenêtre → Extensions → Legolas+ Curves**. Sélectionner un clip qui a déjà des keyframes, cliquer ↻.
+
+## Installer le panneau UXP
+
+UXP Developer Tool → *Add Plugin* → `dist/uxp/manifest.json` → *Load*.
 
 ## Comment ça marche (important)
 
-L'API UXP de Premiere n'expose **pas** les poignées bézier des keyframes. Le panneau garde donc
-la courbe d'easing de chaque segment de son côté et l'écrit dans Premiere sous forme de
-**keyframes linéaires denses** (réduits automatiquement : ~1 par image, moins sur les courbes douces).
-Conséquences :
+Ni ExtendScript ni l'API UXP n'exposent les **poignées bézier** des keyframes. Le panneau garde la courbe
+d'easing de chaque segment de son côté et l'écrit dans Premiere en **keyframes linéaires denses**
+(réduits automatiquement : ~1 par image, beaucoup moins sur les courbes douces).
 
-- Après un « bake », Premiere contient beaucoup de keyframes ; le panneau reconnaît ce qu'il a écrit
-  et garde les keyframes de contrôle éditables tant que vous ne les modifiez pas dans Premiere.
-  Si vous les modifiez à la main, le panneau repart des keyframes présents (courbes linéaires).
-- Le glissement vertical d'un keyframe ne concerne que les propriétés scalaires ; pour Position
-  (2D) seuls le temps et les courbes sont éditables dans le graphe.
+- Le panneau reconnaît ce qu'il a écrit et garde des keyframes de contrôle éditables tant que vous ne
+  les modifiez pas dans Premiere. Si vous les modifiez à la main, il repart des keyframes présents.
+- Le glissement vertical d'un keyframe ne concerne que les propriétés scalaires ; pour Position (2D),
+  seuls le temps et les courbes sont éditables dans le graphe.
 
 ## ⚠️ État de validation
 
-- Moteur (easings, bake, animations) : testé en Node (`node test/engine.test.js`).
-- Interface : testée dans Chromium contre un hôte simulé (`node test/ui.test.js`), affiché en mode
-  « Preview (no Premiere) » quand le panneau est ouvert hors Premiere.
-- **Couche Premiere (`js/host.js`) : écrite d'après l'API UXP publique mais NON testée dans un vrai
-  Premiere** (pas d'accès à l'application ni à la doc Adobe depuis l'environnement de développement).
-  Points à vérifier au premier lancement : lecture des valeurs de keyframes 2D (`PointF`), base de
-  temps des keyframes (relative au clip vs séquence), `createRemoveKeyframeRangeAction`,
-  et le rendu `<canvas>` dans le panneau. Le statut en bas du panneau affiche l'erreur exacte
-  en cas de problème ; ces fonctions sont isolées dans `host.js` pour être ajustées facilement.
+| Élément | Validé |
+|---|---|
+| Moteur (easings, bake, animations) | ✅ tests Node |
+| Interface | ✅ Chromium, hôte simulé (`Preview (no Premiere)`) |
+| CEP : `host.jsx` + pont `evalScript` + panneau | ✅ de bout en bout contre un **faux** ExtendScript ; `host.jsx` vérifié ES3 |
+| **Dans un vrai Premiere Pro** (CEP et UXP) | ❌ **non testé** — pas d'accès à Premiere ici |
+
+À vérifier au premier lancement dans Premiere : la base de temps des keyframes (relative au clip — le
+panneau suppose `temps = séquence − début du clip + point d'entrée`, à ajuster dans `LG_scan` /
+`host.js` sinon), la valeur des propriétés 2D, et pour UXP le rendu `<canvas>`. Le pied du panneau affiche
+l'erreur exacte renvoyée par Premiere.
 
 ## Tests
 
 ```
-cd curve-editor && npm test
+cd curve-editor && npm test     # build + moteur + interface + CEP
 ```
