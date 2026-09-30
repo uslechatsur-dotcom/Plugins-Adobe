@@ -2,43 +2,28 @@ LEGOLAS+ CURVES v__VERSION__ — éditeur de courbes pour Adobe Premiere Pro
 =========================================================================
 
 Contenu du zip :
-  panneau-UXP/     Panneau UXP  -> Premiere Pro 25.6 et plus (dont 2026)        RECOMMANDÉ
-  extension-CEP/   Extension CEP -> Premiere Pro 2020 à 2025 (peut ne plus être chargée dans 26.x)
+  extension-CEP/   Extension CEP  -> Premiere Pro 2020 à 2026                 RECOMMANDÉE (confirmée sur Premiere 26)
+  panneau-UXP/     Panneau UXP    -> Premiere Pro 25.6 et plus                alternative, non validée
   install-*.command / install-*.bat / *.reg   raccourcis d'installation de l'extension CEP (facultatifs)
 
 IMPORTANT (Windows) : « Contrôle intelligent des applications » bloque les scripts .bat téléchargés.
-Aucune des méthodes ci-dessous n'en a besoin : vous copiez simplement des dossiers.
+Les méthodes ci-dessous n'en ont pas besoin : vous copiez simplement des dossiers.
 
 --------------------------------------------------------------------------
-MÉTHODE A — Panneau UXP (Premiere Pro 25.6+, dont 2026)   [sans script]
---------------------------------------------------------------------------
-1. Décompressez le zip (clic droit > Extraire tout). Notez où se trouve le dossier « panneau-UXP ».
-   Placez-le dans un endroit stable, ex. Documents\Legolas-Curves\panneau-UXP
-   (Premiere lira ce dossier : ne le supprimez pas).
-2. Ouvrez l'application Creative Cloud > Toutes les applications > cherchez
-   « UXP Developer Tool » > Installer, puis lancez-la.
-3. Lancez Premiere Pro et ouvrez un projet + une séquence.
-4. Dans UXP Developer Tool : acceptez « Enable Developer Mode » si demandé (mot de passe admin Windows),
-   puis « Add Plugin » > choisissez  panneau-UXP\manifest.json .
-5. Cliquez sur « Load » à côté de « Legolas+ Curves » (application : Premiere Pro).
-6. Dans Premiere : Fenêtre > Plug-ins UXP > Legolas+ Curves.
-   (Si le panneau disparaît après un redémarrage de Premiere, refaites simplement l'étape 5.)
-
---------------------------------------------------------------------------
-MÉTHODE B — Extension CEP (Premiere Pro 2020 à 2025)   [sans script]
+INSTALLATION — Extension CEP (recommandée)   [sans script]
 --------------------------------------------------------------------------
 1. Décompressez le zip.
 2. Touches Windows+R, tapez  %APPDATA%\Adobe\CEP\extensions  puis Entrée.
    (Si Windows dit que le dossier n'existe pas : ouvrez %APPDATA%\Adobe, créez le dossier CEP,
     dedans le dossier extensions, puis ouvrez-le.)
 3. Copiez-y le dossier  extension-CEP\com.legolasplus.curveeditor  (le dossier lui-même).
+   Pour une MISE À JOUR : remplacez l'ancien dossier du même nom (Premiere fermé).
    Vous devez obtenir :  ...\CEP\extensions\com.legolasplus.curveeditor\index.html
-4. Autorisez les extensions non signées — au choix :
+4. Autorisez les extensions non signées (une seule fois) — au choix :
    a) double-clic sur  enable-cep-windows.reg  > Oui > OK ;
    b) ou, si le .reg est bloqué : ouvrez PowerShell (menu Démarrer), collez cette ligne, Entrée :
       foreach($v in 9..12){ New-Item "HKCU:\Software\Adobe\CSXS.$v" -Force | Out-Null; New-ItemProperty "HKCU:\Software\Adobe\CSXS.$v" -Name PlayerDebugMode -Value "1" -PropertyType String -Force | Out-Null }
 5. Redémarrez Premiere Pro : Fenêtre > Extensions > Legolas+ Curves.
-   Si le menu Extensions n'apparaît pas ou est vide, votre version ne charge plus CEP : utilisez la méthode A.
 
 macOS : double-clic sur install-mac.command (clic droit > Ouvrir si macOS refuse), ou copiez le dossier
 dans  ~/Library/Application Support/Adobe/CEP/extensions/  et lancez dans Terminal :
@@ -47,18 +32,30 @@ dans  ~/Library/Application Support/Adobe/CEP/extensions/  et lancez dans Termin
 --------------------------------------------------------------------------
 UTILISATION
 --------------------------------------------------------------------------
-1. Sélectionnez dans la timeline un clip qui a déjà des keyframes (Position, Échelle, Rotation,
-   Opacité… au moins 2 keyframes), puis cliquez sur l'icône ↻ du panneau.
+1. Dans la timeline, cliquez un clip qui a des keyframes (Position, Échelle, Rotation, Opacité…,
+   au moins 2 keyframes). Le panneau suit automatiquement votre sélection (bouton ↻ = relecture forcée).
+   Si rien n'est sélectionné, il prend le clip sous la tête de lecture.
 2. Onglet Curves : cliquez un keyframe, choisissez un preset d'easing en bas ou tirez les poignées.
    « Live » écrit le résultat dans Premiere en direct. Double-clic sur la courbe = ajouter un keyframe,
    Suppr = supprimer, F = tout afficher.
 3. Onglet Animations : Bounce, Elastic, Wiggle… réglez, puis « Apply at playhead ».
 
+SI LE PANNEAU AFFICHE UNE ERREUR (message rouge en bas)
+- « No clip selected… » : cliquez le clip dans la timeline (pas seulement dans le Projet).
+- « The selected item has no effects [ … ] » : envoyez-moi le texte entre crochets, il dit ce que
+  Premiere renvoie pour votre sélection.
+- « Clip has no keyframes » : ajoutez au moins 2 keyframes sur une propriété (ex. Position) dans
+  Options d'effet, puis attendez une seconde ou cliquez ↻.
+
 À SAVOIR
 - Premiere ne permet pas de régler les poignées bézier par script : les courbes sont écrites en
   keyframes linéaires denses. Beaucoup de keyframes après un easing, c'est normal.
-- Cette version n'a pas encore été testée dans un vrai Premiere Pro. Si une erreur s'affiche en bas
-  du panneau ou si les keyframes se placent au mauvais endroit, envoyez-en une capture.
+- Si vous modifiez des keyframes à la main dans Premiere, cliquez ↻ pour que le panneau les relise.
 
 DÉSINSTALLATION : supprimez le dossier com.legolasplus.curveeditor de ...\CEP\extensions
-(CEP) ou cliquez « Unload » / retirez le plugin dans UXP Developer Tool (UXP).
+
+--------------------------------------------------------------------------
+ALTERNATIVE — Panneau UXP (Premiere Pro 25.6+)   [non validé dans un vrai Premiere]
+--------------------------------------------------------------------------
+UXP Developer Tool (application Creative Cloud) > Add Plugin > panneau-UXP\manifest.json > Load,
+puis Fenêtre > Plug-ins UXP > Legolas+ Curves. (Placez d'abord panneau-UXP dans un dossier stable.)

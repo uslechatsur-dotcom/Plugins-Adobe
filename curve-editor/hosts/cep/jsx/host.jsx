@@ -32,18 +32,49 @@ function LG_sequence() {
 }
 
 function LG_findByNodeId(seq, nodeId) {
-  var t, c, tr;
-  for (t = 0; t < seq.videoTracks.numTracks; t++) {
-    tr = seq.videoTracks[t];
-    for (c = 0; c < tr.clips.numItems; c++) if (tr.clips[c].nodeId === nodeId) return tr.clips[c];
+  var kinds = [seq.videoTracks, seq.audioTracks], k, t, c, tr;
+  for (k = 0; k < kinds.length; k++) {
+    if (!kinds[k]) continue;
+    for (t = 0; t < kinds[k].numTracks; t++) {
+      tr = kinds[k][t];
+      for (c = 0; c < tr.clips.numItems; c++) if (tr.clips[c].nodeId === nodeId) return tr.clips[c];
+    }
   }
   return null;
 }
 
-function LG_selectedClip(seq) {
-  var sel = seq.getSelection(), i;
-  for (i = 0; sel && i < sel.length; i++) if (sel[i] && sel[i].components) return sel[i];
-  return null;
+/* Clips that have an effect stack, in the selection (may be empty). */
+function LG_selection(seq) {
+  var sel = seq.getSelection(), out = [], i;
+  for (i = 0; sel && i < sel.length; i++) if (sel[i] && sel[i].components) out.push(sel[i]);
+  return out;
+}
+function LG_selectionSize(seq) { var sel = seq.getSelection(); return sel ? sel.length : 0; }
+
+/* Video clips under the playhead, top track first (fallback when nothing is selected). */
+function LG_underPlayhead(seq) {
+  var ph = seq.getPlayerPosition().seconds, out = [], t, c, cl;
+  for (t = seq.videoTracks.numTracks - 1; t >= 0; t--) {
+    for (c = 0; c < seq.videoTracks[t].clips.numItems; c++) {
+      cl = seq.videoTracks[t].clips[c];
+      if (cl.start.seconds <= ph && ph < cl.end.seconds) out.push(cl);
+    }
+  }
+  return out;
+}
+/* Short description of what getSelection() returned, for error messages: "name(components:object), …" */
+function LG_describeSelection(seq) {
+  var sel = seq.getSelection(), out = [], i;
+  for (i = 0; sel && i < sel.length && i < 4; i++) out.push(String(sel[i] && sel[i].name) + '(components:' + typeof (sel[i] && sel[i].components) + ')');
+  return (sel ? sel.length : 0) + ' selected: ' + out.join(', ');
+}
+function LG_selectedClip(seq) { var s = LG_selection(seq); return s.length ? s[0] : null; }
+
+/* Identity of "what the panel should be showing": the selection, or the clips under the playhead when nothing is selected. */
+function LG_sig(seq) {
+  var sel = LG_selection(seq), list = sel.length ? sel : (LG_selectionSize(seq) ? [] : LG_underPlayhead(seq)), ids = [], i;
+  for (i = 0; i < list.length; i++) ids.push(list[i].nodeId);
+  return (sel.length ? 's:' : 'p:') + ids.join(',');
 }
 
 function LG_isNum(v) { return typeof v === 'number' && isFinite(v); }
@@ -57,36 +88,62 @@ function LG_ref(v) {
   return Math.max(Math.abs(v), 100) * (Math.abs(v) < 5 ? 1 : 0.5);
 }
 
-/* -> {ok, clip, node, fps, playhead, channels:[{id,name,group,dims,ref,keys:[{time,value}]}]} */
+/* Animated (keyframed, numeric or 2-D) properties of a clip. */
+function LG_channels(clip) {
+  var channels = [], ci, pi, ki, comp, p, keys, out, v;
+  for (ci = 0; ci < clip.components.numItems; ci++) {
+    comp = clip.components[ci];
+    for (pi = 0; pi < comp.properties.numItems; pi++) {
+      p = comp.properties[pi];
+      try { if (!p.isTimeVarying()) continue; keys = p.getKeys(); } catch (e) { continue; }
+      if (!keys || !keys.length) continue;
+      out = [];
+      for (ki = 0; ki < keys.length; ki++) {
+        v = LG_value(p.getValueAtKey(keys[ki]));
+        if (v === null) { out = null; break; }
+        out.push({ time: keys[ki].seconds, value: v });
+      }
+      if (!out) continue;
+      channels.push({
+        id: ci + ':' + pi, name: p.displayName, group: comp.displayName,
+        dims: LG_isArray(out[0].value) ? 2 : 1, ref: LG_ref(out[0].value), keys: out
+      });
+    }
+  }
+  return channels;
+}
+
+/* Cheap poll (called about once a second): playhead + selection signature. */
+function LG_probe() {
+  try {
+    var seq = LG_sequence();
+    return LG_json({ ok: true, sig: LG_sig(seq), abs: seq.getPlayerPosition().seconds });
+  } catch (e) { return LG_fail(e); }
+}
+
+/* -> {ok, clip, node, how, sig, fps, offset, abs, playhead, channels:[{id,name,group,dims,ref,keys:[{time,value}]}]}
+ * Picks the first selected clip that has animated properties; with an empty selection, falls back to the
+ * clips under the playhead. `offset` = clip.start - clip.inPoint, so clip-local time = sequence time - offset. */
 function LG_scan() {
   try {
-    var seq = LG_sequence(), clip = LG_selectedClip(seq);
-    if (!clip) return LG_fail('Select a clip in the timeline.');
-    var channels = [], ci, pi, ki, comp, p, keys, out, v, ts;
-    for (ci = 0; ci < clip.components.numItems; ci++) {
-      comp = clip.components[ci];
-      for (pi = 0; pi < comp.properties.numItems; pi++) {
-        p = comp.properties[pi];
-        try { if (!p.isTimeVarying()) continue; keys = p.getKeys(); } catch (e) { continue; }
-        if (!keys || !keys.length) continue;
-        out = [];
-        for (ki = 0; ki < keys.length; ki++) {
-          v = LG_value(p.getValueAtKey(keys[ki]));
-          if (v === null) { out = null; break; }
-          out.push({ time: keys[ki].seconds, value: v });
-        }
-        if (!out) continue;
-        channels.push({
-          id: ci + ':' + pi, name: p.displayName, group: comp.displayName,
-          dims: LG_isArray(out[0].value) ? 2 : 1, ref: LG_ref(out[0].value), keys: out
-        });
-      }
+    var seq = LG_sequence(), sel = LG_selection(seq), how = 'selection', list = sel, chosen = null, channels = [], i, ch, ts, abs;
+    if (!list.length) {
+      if (LG_selectionSize(seq)) return LG_fail('The selected item has no effects — select a video clip. [' + LG_describeSelection(seq) + ']');
+      list = LG_underPlayhead(seq); how = 'playhead';
+      if (!list.length) return LG_fail('No clip selected in the timeline, and no clip under the playhead.');
     }
+    for (i = 0; i < list.length; i++) {
+      ch = LG_channels(list[i]);
+      if (ch.length) { chosen = list[i]; channels = ch; break; }
+    }
+    if (!chosen) chosen = list[0];
     ts = Number(seq.timebase);
+    abs = seq.getPlayerPosition().seconds;
     return LG_json({
-      ok: true, clip: clip.name, node: clip.nodeId,
+      ok: true, clip: chosen.name, node: chosen.nodeId, how: how, sig: LG_sig(seq),
       fps: ts > 0 ? LG_TICKS_PER_SECOND / ts : 30,
-      playhead: seq.getPlayerPosition().seconds - clip.start.seconds + clip.inPoint.seconds,
+      offset: chosen.start.seconds - chosen.inPoint.seconds, abs: abs,
+      playhead: abs - chosen.start.seconds + chosen.inPoint.seconds,
       channels: channels
     });
   } catch (e) { return LG_fail(e); }

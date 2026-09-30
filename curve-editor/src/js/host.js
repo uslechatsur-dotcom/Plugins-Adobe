@@ -1,6 +1,7 @@
 /* Host adapters — the panel only ever talks to this interface:
  *   scan()             -> { clip, fps, playhead, channels:[{id,name,group,dims,ref,keys:[{time,value}]}] }
  *   apply(edits,label) -> writes edits:[{id, keys:[{time,value}]}] (replaces each channel's keyframes)
+ *   probe()            -> optional { sig, abs }: selection signature + sequence playhead, polled to follow the timeline
  *
  * `premiere` = UXP (`premierepro` module), `cep` = CEP extension (ExtendScript via evalScript),
  * `mock` = in-memory stand-in when opened in a plain browser (dev / tests / screenshots). */
@@ -104,6 +105,7 @@
     return {
       name: 'Premiere Pro · CEP', live: true,
       async scan() { const r = await run('scan'); node = r.node; return r; },
+      async probe() { return run('probe'); },      // { sig, abs } — cheap enough to poll
       async apply(edits, label) { await run('apply', { node, label, edits }); },
     };
   }
@@ -123,7 +125,8 @@
     const copy = (x) => JSON.parse(JSON.stringify(x));
     return {
       name: 'Preview (no Premiere)', live: false, state,
-      async scan() { return { clip: 'demo_clip.mp4', fps, playhead: state.playhead, channels: copy(state.channels) }; },
+      async scan() { return { clip: 'demo_clip.mp4', fps, playhead: state.playhead, sig: 'mock', offset: 0, how: 'selection', channels: copy(state.channels) }; },
+      async probe() { return { sig: 'mock', abs: state.playhead }; },
       async apply(edits) { edits.forEach((e) => { const c = state.channels.find((x) => x.id === e.id); if (c) c.keys = copy(e.keys); }); },
     };
   }

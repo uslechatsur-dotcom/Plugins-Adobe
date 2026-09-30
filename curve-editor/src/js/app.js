@@ -90,7 +90,7 @@
   async function scan(quiet) {
     try {
       const r = await S.host.scan();
-      S.fps = r.fps || 30; S.playhead = r.playhead || 0; S.clip = r.clip;
+      S.fps = r.fps || 30; S.playhead = r.playhead || 0; S.clip = r.clip; S.sig = r.sig; S.offset = r.offset; S.how = r.how;
       const next = {}; const order = [];
       r.channels.forEach((m, n) => {
         const prev = S.ch[m.id];
@@ -109,9 +109,9 @@
       if (!S.visible.size) order.slice(0, 2).forEach((id) => S.visible.add(id));
       S.sel = new Set([...S.sel].filter((s) => next[s.split('#')[0]]));
       S.error = order.length ? '' : 'No animated properties on “' + S.clip + '”.\nAdd at least two keyframes (e.g. Position or Scale), then rescan.';
-      if (!quiet) { fitView(); status(order.length ? `Scan OK — ${order.length} animated channel(s) on “${S.clip}”` : 'Clip has no keyframes', order.length ? 'ok' : 'err'); }
+      if (!quiet) { fitView(); status(order.length ? `${order.length} animated channel(s) on “${S.clip}”${S.how === 'playhead' ? ' (clip under the playhead — nothing selected)' : ''}` : 'Clip has no keyframes', order.length ? 'ok' : 'err'); }
     } catch (e) {
-      S.ch = {}; S.order = []; S.visible.clear(); S.sel.clear(); S.clip = ''; S.error = e.message || String(e);
+      S.ch = {}; S.order = []; S.visible.clear(); S.sel.clear(); S.clip = ''; S.error = e.message || String(e); S.sig = null;
       status(S.error, 'err');
     }
     renderAll(); renderAnimSide();
@@ -129,13 +129,31 @@
       c.bakedKeys = keys; return { id, keys };
     });
     if (!edits.length) return;
+    S.busy = true;
     try {
       await S.host.apply(edits, 'Legolas curves');
       status(`Baked ${edits.length} channel(s) · ${edits.reduce((n, e) => n + e.keys.length, 0)} keyframes`, 'ok');
       if (S.host.live) await scan(true);
     } catch (e) { status('Apply failed: ' + (e.message || e), 'err'); }
+    finally { S.busy = false; }
   }
   const markDirty = (c) => { dirty.add(c.id); scheduleCommit(); };
+
+  // Follow the timeline: when the selection changes, rescan; keep the playhead line in sync.
+  async function poll() {
+    if (!S.host.probe || S.busy || drag || dirty.size || document.hidden) return;
+    S.busy = true;
+    try {
+      const r = await S.host.probe();
+      if (r.sig !== S.sig) { S.busy = false; return scan(); }
+      if (typeof r.abs === 'number' && typeof S.offset === 'number') {
+        const ph = r.abs - S.offset;
+        if (Math.abs(ph - S.playhead) > 1e-4) { S.playhead = ph; renderAll(); }
+      }
+    } catch (e) { /* host busy or panel hidden: try again next tick */ }
+    S.busy = false;
+  }
+  setInterval(poll, S.pollMs = window.LG_POLL_MS || 1200);
 
   // ------------------------------------------------------------------ canvas plumbing
   function setup(canvas) {
