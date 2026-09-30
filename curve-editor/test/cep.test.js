@@ -54,7 +54,7 @@ vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../hosts/cep/jsx/host.j
   seq.getSelection = () => [];
   await p.click('#btn-scan'); await p.waitForTimeout(200);
   assert.ok((await p.textContent('#status-text')).includes('Select a clip'), 'status shows host error');
-  await p.screenshot({ path: process.argv[2] ? path.join(process.argv[2], '07-cep-error.png') : '/dev/null' });
+  if (process.argv[2]) await p.screenshot({ path: path.join(process.argv[2], '07-cep-error.png') });
   assert.deepStrictEqual(errs, [], errs.join('|'));
   console.log('CEP tests passed'); await b.close();
 })().catch((e) => { console.error(e); process.exit(1); });
