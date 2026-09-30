@@ -18,6 +18,21 @@ Panneau d'éditeur de courbes façon After Effects, livré en **deux versions** 
   réglages Cycles / Height / Damping / Duration / Variation, appliqués au playhead.
 - Annuler / rétablir, mode **Live** (écrit dans Premiere pendant l'édition).
 
+## Installateur Windows (.exe)
+
+```
+cd curve-editor && npm run installer     # -> release/Legolas-Curves-Setup-<version>.exe
+```
+Installateur graphique (Go + WebView2, ~3 Mo, sans droits administrateur) qui embarque le panneau UXP en `.ccx` :
+1. tente l'installateur Adobe (`UnifiedPluginInstallerAgent.exe --install`) et vérifie avec `--list all` ;
+2. sinon copie dans `%APPDATA%\Adobe\UXP\Plugins\External\<id>_<version>` et ajoute l'entrée dans
+   `%APPDATA%\Adobe\UXP\PluginsInfo\v1\PPRO.json` (autres plugins conservés, sauvegarde `.legolas-curves.bak`).
+Options : `--silent` (ou `/S`), `--uninstall`. Journal : `%TEMP%\LegolasCurves-setup.log`.
+Code : `../installer/` (tests : `cd ../installer && go test ./...`).
+
+**Non signé** : Windows (SmartScreen / Contrôle intelligent des applications) peut le bloquer ; seule une signature
+de code (certificat) règle ça. **Non testé sous Windows / dans un vrai Premiere.**
+
 ## Build
 
 ```

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Legolas+ Curves — Installation</title>
+<style>
+  :root { --bg:#1b1c1f; --surface:#232529; --surface2:#2c2f35; --border:#33363d; --text:#e9ebef; --muted:#8b909b; --faint:#5d626c;
+          --accent:#7b8cff; --teal:#52d1b2; --ok:#4cd08a; --amber:#f5a94a; --danger:#ff6b6b; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); overflow:hidden;
+    font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; font-size:13px; line-height:1.45; -webkit-user-select:none; user-select:none; }
+  #wrap { height:100vh; display:flex; flex-direction:column; padding:26px 32px 22px;
+    background: radial-gradient(520px 260px at 85% -10%, rgba(123,140,255,.16), transparent 70%), radial-gradient(420px 240px at -10% 110%, rgba(82,209,178,.10), transparent 70%), var(--bg); }
+  header { display:flex; align-items:center; }
+  .logo { width:40px; height:40px; margin-right:14px; filter: drop-shadow(0 6px 14px rgba(123,140,255,.35)); }
+  h1 { font-size:20px; margin:0; letter-spacing:.2px; } h1 b { color:var(--ok); }
+  .ver { margin-left:auto; color:var(--faint); font-size:11px; text-align:right; }
+  .tag { display:inline-block; margin-top:2px; padding:1px 8px; border-radius:9px; background:rgba(76,208,138,.12); color:var(--ok); border:1px solid rgba(76,208,138,.35); font-size:11px; }
+  main { flex:1; display:flex; flex-direction:column; min-height:0; margin-top:22px; }
+  .screen { display:none; flex:1; flex-direction:column; animation: in .25s ease; }
+  .screen.on { display:flex; }
+  @keyframes in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .lead { font-size:15px; font-weight:600; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 18px; }
+  .curve { height:84px; margin:2px 0 16px; border:1px solid var(--border); border-radius:12px; background:var(--surface); overflow:hidden; }
+  .curve path.line { stroke-dasharray: 520; stroke-dashoffset: 520; animation: draw 2.4s .2s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  ul.feat { list-style:none; margin:0 0 14px; padding:0; }
+  ul.feat li { display:flex; align-items:center; padding:5px 0; color:#cfd3db; }
+  .tick { width:18px; height:18px; border-radius:9px; margin-right:10px; background:rgba(76,208,138,.14); border:1px solid rgba(76,208,138,.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .note { padding:9px 12px; border-radius:9px; border:1px solid rgba(245,169,74,.4); background:rgba(245,169,74,.09); color:#f6c98a; margin-bottom:12px; }
+  .note.err { border-color:rgba(255,107,107,.45); background:rgba(255,107,107,.09); color:#ffb0b0; }
+  .spacer { flex:1; }
+  .actions { display:flex; align-items:center; }
+  button { font:inherit; color:var(--text); border:1px solid var(--border); background:var(--surface2); border-radius:9px; padding:10px 18px; cursor:pointer; }
+  button:hover { border-color:#4a4f59; background:#343841; }
+  button.primary { background:linear-gradient(180deg,#8b9bff,#6c7df0); border-color:#7b8cff; color:#fff; font-weight:600; min-width:150px; }
+  button.primary:hover { filter:brightness(1.08); }
+  button.ghost { background:transparent; border-color:transparent; color:var(--muted); padding:10px 12px; }
+  button.ghost:hover { color:var(--text); background:transparent; }
+  button:disabled { opacity:.45; cursor:default; }
+  .actions .sp { flex:1; }
+  .steps { margin:8px 0 0; }
+  .step { display:flex; align-items:center; padding:12px 14px; margin-bottom:8px; border:1px solid var(--border); border-radius:11px; background:var(--surface); }
+  .step .ico { width:22px; height:22px; margin-right:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .step .t { font-weight:600; } .step .d { color:var(--muted); font-size:11.5px; word-break:break-all; }
+  .step.pending { opacity:.45; }
+  .spin { width:16px; height:16px; border-radius:50%; border:2px solid rgba(123,140,255,.25); border-top-color:var(--accent); animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  .badge { width:64px; height:64px; border-radius:32px; margin:6px 0 14px; display:flex; align-items:center; justify-content:center; }
+  .badge.ok { background:rgba(76,208,138,.14); border:1px solid rgba(76,208,138,.5); box-shadow:0 0 30px rgba(76,208,138,.2); }
+  .badge.err { background:rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.5); }
+  ol.next { margin:0 0 12px; padding-left:20px; color:#cfd3db; } ol.next li { margin:5px 0; } ol.next b { color:var(--text); }
+  .mono { font-family:Consolas,monospace; font-size:11.5px; color:var(--muted); word-break:break-all; }
+  .foot { color:var(--faint); font-size:11px; margin-top:12px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <svg class="logo" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b8cff"/><stop offset="1" stop-color="#52d1b2"/></linearGradient></defs>
+      <rect x="1" y="1" width="46" height="46" rx="12" fill="url(#g)"/>
+      <path d="M9 36 C20 36 18 12 39 12" fill="none" stroke="#0f1420" stroke-width="4.4" stroke-linecap="round"/>
+      <circle cx="9" cy="36" r="4.2" fill="#0f1420"/><circle cx="39" cy="12" r="4.2" fill="#0f1420"/></svg>
+    <div><h1>Legolas<b>+</b> Curves</h1><span class="tag">Éditeur de courbes pour Premiere Pro</span></div>
+    <div class="ver" id="ver"></div>
+  </header>
+
+  <main>
+    <section id="s-home" class="screen on">
+      <p class="lead" id="home-title">Prêt à installer</p>
+      <p class="sub">Easings, poignées bézier, dopesheet et animations — installé en quelques secondes.</p>
+      <div class="curve"><svg viewBox="0 0 520 84" width="100%" height="100%" preserveAspectRatio="none">
+        <path d="M0 42H520" stroke="rgba(255,255,255,.06)"/><path class="line" d="M14 68 C150 68 150 16 260 16 S390 60 506 22" fill="none" stroke="#7b8cff" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <ul class="feat">
+        <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5.2l2.4 2.4 4.6-5" fill="none" stroke="#4cd08a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="req">Premiere Pro 2025 (25.6) ou plus récent</span></li>
+        <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5.2l2.4 2.4 4.6-5" fill="none" stroke="#4cd08a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Aucun droit administrateur requis</li>
+        <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5.2l2.4 2.4 4.6-5" fill="none" stroke="#4cd08a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Installé pour votre compte Windows uniquement</li>
+      </ul>
+      <div id="running" class="note" style="display:none">Premiere Pro est ouvert. Redémarrez-le après l'installation pour voir le panneau.</div>
+      <div class="spacer"></div>
+      <div class="actions"><button id="b-uninstall" class="ghost" style="display:none">Désinstaller</button><span class="sp"></span><button id="b-close1" class="ghost">Annuler</button><button id="b-install" class="primary">Installer</button></div>
+    </section>
+
+    <section id="s-progress" class="screen">
+      <p class="lead" id="p-title">Installation en cours…</p><p class="sub">Ne fermez pas cette fenêtre.</p>
+      <div class="steps" id="steps"></div>
+    </section>
+
+    <section id="s-done" class="screen">
+      <div class="badge ok"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M7 15.5l5.5 5.5L23 9" fill="none" stroke="#4cd08a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <p class="lead" id="d-title">Installation terminée</p>
+      <div id="d-body"></div>
+      <div class="spacer"></div>
+      <div class="actions"><span class="sp"></span><button id="b-close2" class="primary">Terminer</button></div>
+    </section>
+
+    <section id="s-error" class="screen">
+      <div class="badge err"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M6 6l14 14M20 6L6 20" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <p class="lead" id="e-title">L'installation a échoué</p>
+      <div class="note err" id="e-msg"></div>
+      <div class="foot">Journal : <span class="mono" id="e-log"></span><br>Envoyez ce fichier pour obtenir de l'aide.</div>
+      <div class="spacer"></div>
+      <div class="actions"><span class="sp"></span><button id="b-close3" class="ghost">Fermer</button><button id="b-retry" class="primary">Réessayer</button></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const LABELS = { prepare: 'Préparation du paquet', install: 'Installation du plugin', register: 'Enregistrement dans Premiere Pro' };
+  const ICON = {
+    ok: '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(76,208,138,.15)" stroke="#4cd08a"/><path d="M5.5 10.3l3 3 6-6.4" fill="none" stroke="#4cd08a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    warn: '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(245,169,74,.15)" stroke="#f5a94a"/><path d="M10 5.5v5.5M10 13.6v.8" stroke="#f5a94a" stroke-width="1.9" stroke-linecap="round"/></svg>',
+    err: '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(255,107,107,.15)" stroke="#ff6b6b"/><path d="M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4" stroke="#ff6b6b" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    run: '<div class="spin"></div>', pending: '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="none" stroke="#5d626c"/></svg>',
+  };
+  let info = null, action = 'install';
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const show = (id) => document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('on', s.id === id));
+
+  function buildSteps() {
+    $('steps').innerHTML = Object.keys(LABELS).map((k) =>
+      `<div class="step pending" id="st-${k}"><div class="ico">${ICON.pending}</div><div><div class="t">${LABELS[k]}</div><div class="d" id="sd-${k}">En attente</div></div></div>`).join('');
+  }
+  function setStep(step, state, detail) {
+    const el = $('st-' + step); if (!el) return;
+    el.classList.toggle('pending', false);
+    el.querySelector('.ico').innerHTML = ICON[state] || ICON.run;
+    $('sd-' + step).textContent = detail || (state === 'run' ? 'En cours…' : '');
+  }
+
+  function start(a) {
+    action = a; buildSteps();
+    $('p-title').textContent = a === 'install' ? 'Installation en cours…' : 'Désinstallation en cours…';
+    show('s-progress');
+    (a === 'install' ? window.lg_install() : window.lg_uninstall());
+  }
+
+  async function finish(d) {
+    if (!d.ok) {
+      $('e-title').textContent = d.action === 'install' ? "L'installation a échoué" : 'La désinstallation a échoué';
+      $('e-msg').textContent = d.error || 'Erreur inconnue.';
+      try { $('e-log').textContent = await window.lg_log_path(); } catch (e) { $('e-log').textContent = '%TEMP%\\LegolasCurves-setup.log'; }
+      return show('s-error');
+    }
+    const warn = (d.warnings || []).map((w) => `<div class="note">${esc(w)}</div>`).join('');
+    if (d.action === 'uninstall') {
+      $('d-title').textContent = 'Désinstallation terminée';
+      $('d-body').innerHTML = '<p class="sub">Legolas+ Curves a été retiré. Redémarrez Premiere Pro pour finaliser.</p>' + warn;
+    } else {
+      $('d-title').textContent = 'Installation terminée';
+      $('d-body').innerHTML = '<ol class="next"><li><b>Redémarrez</b> Premiere Pro (fermez-le complètement).</li>' +
+        '<li>Ouvrez <b>Fenêtre → Plug-ins UXP → Legolas+ Curves</b>.</li>' +
+        '<li>Sélectionnez un clip animé, puis cliquez sur <b>↻</b>.</li></ol>' + warn +
+        (d.method === 'manual' ? '<div class="foot">Installation manuelle : si le panneau n’apparaît pas dans le menu, activez le mode développeur (UXP Developer Tool) — voir LISEZMOI.</div>' : '');
+    }
+    show('s-done');
+  }
+
+  window.__lg = { on(ev, p) { if (ev === 'progress') setStep(p.step, p.state, p.detail); else if (ev === 'done') setTimeout(() => finish(p), 450); } };
+
+  async function init() {
+    try { info = await window.lg_info(); } catch (e) { info = { name: 'Legolas+ Curves', version: '', installed: false }; }
+    $('ver').innerHTML = 'Plugin ' + esc(info.version || '') + '<br>Setup ' + esc(info.setup || '');
+    if (info.minVersion) $('req').textContent = 'Premiere Pro ' + info.minVersion + ' ou plus récent (2025+)';
+    if (info.installed) { $('home-title').textContent = 'Déjà installé — mettre à jour ?'; $('b-install').textContent = 'Réinstaller'; $('b-uninstall').style.display = ''; }
+    $('running').style.display = info.premiereRunning ? '' : 'none';
+  }
+  $('b-install').onclick = () => start('install');
+  $('b-uninstall').onclick = () => start('uninstall');
+  $('b-retry').onclick = () => start(action);
+  ['b-close1', 'b-close2', 'b-close3'].forEach((id) => ($(id).onclick = () => window.lg_close()));
+  init();
+})();
+</script>
+</body>
+</html>

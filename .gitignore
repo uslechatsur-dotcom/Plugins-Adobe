@@ -3,3 +3,5 @@ node_modules/
 *.zxp
 curve-editor/dist/
 curve-editor/release/
+installer/payload/plugin.ccx
+installer/rsrc_windows_amd64.syso
