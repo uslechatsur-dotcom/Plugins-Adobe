@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Speed Curves</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="speed.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <canvas class="ico logo" data-ico="logo" width="22" height="22"></canvas>
+      <span class="name">Speed<b>Curves</b></span><span class="sub">Time remapping</span>
+    </div>
+    <div class="meta">
+      <span id="clipname" class="pill hidden"></span>
+      <span id="hostbadge" class="badge"></span>
+    </div>
+  </header>
+
+  <div id="bar">
+    <nav class="tabs">
+      <button class="tab active" data-tab="speed">Speed</button>
+      <button class="tab" data-tab="keys">Keyframes</button>
+      <button class="tab" data-tab="ramps">Ramps</button>
+      <button class="tab" data-tab="setup">Setup</button>
+    </nav>
+    <div class="tools">
+      <button class="tool" id="btn-scan" title="Rescan the selected clip"><canvas class="ico" data-ico="refresh"></canvas></button>
+      <button class="tool" id="btn-fit" title="Fit view (F)"><canvas class="ico" data-ico="fit"></canvas></button>
+      <button class="tool on" id="btn-follow" title="Follow the Premiere playhead (scroll the view while playing)"><canvas class="ico" data-ico="target"></canvas></button>
+      <span class="sep"></span>
+      <button class="tool" id="btn-add" title="Add a keyframe at the playhead"><canvas class="ico" data-ico="keyadd"></canvas></button>
+      <button class="tool" id="btn-del" title="Delete selected keyframes (Del)"><canvas class="ico" data-ico="trash"></canvas></button>
+      <button class="tool" id="btn-save" title="Save the selected easing as a custom preset"><canvas class="ico" data-ico="star"></canvas></button>
+      <span class="sep"></span>
+      <button class="tool" id="btn-undo" title="Undo (Ctrl+Z)"><canvas class="ico" data-ico="undo"></canvas></button>
+      <button class="tool" id="btn-redo" title="Redo (Ctrl+Shift+Z)"><canvas class="ico" data-ico="redo"></canvas></button>
+      <span class="sep"></span>
+      <button class="live on" id="btn-live" title="Live: write to Premiere while you edit"><span class="led"></span>Live</button>
+    </div>
+  </div>
+
+  <section id="tab-speed" class="pane">
+    <div id="hud" class="hud">
+      <span class="chip"><i class="dot" style="background:#8b9bff"></i>Speed <b id="h-speed">—</b></span>
+      <span class="chip"><i class="dot" style="background:#52d1b2"></i>Source <b id="h-src">—</b></span>
+      <span class="chip">Clip <b id="h-clip">—</b></span>
+      <span class="chip live-chip" id="h-live" title="The cursor follows Premiere's timeline playhead"><i class="dot"></i><span id="h-live-t">cursor</span></span>
+    </div>
+    <div class="split">
+      <aside id="info" class="card"></aside>
+      <div class="stage card"><canvas id="cv"></canvas><div id="empty" class="empty hidden"></div></div>
+    </div>
+    <div id="presetbar">
+      <div class="groups" id="groups"></div>
+      <div class="presets" id="presets"></div>
+      <div class="strength"><label for="strength">Strength</label><input id="strength" type="range" min="0" max="100" value="100"><span id="strength-v">100%</span></div>
+    </div>
+  </section>
+
+  <section id="tab-keys" class="pane hidden">
+    <div class="card keytable"><table id="ktable"></table><div id="kempty" class="empty hidden"></div></div>
+  </section>
+
+  <section id="tab-ramps" class="pane hidden">
+    <div class="split">
+      <div id="anim-list"></div>
+      <div class="anim-main">
+        <div class="anim-head"><span class="anim-title" id="anim-title"></span><span class="anim-hint" id="anim-hint"></span></div>
+        <div class="stage card"><canvas id="anim-cv"></canvas></div>
+      </div>
+      <div class="anim-side card">
+        <div class="side-title">Settings</div>
+        <div id="anim-params"></div>
+        <button id="anim-apply" class="primary">Apply at playhead</button>
+        <div class="foot" id="anim-note"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-setup" class="pane hidden">
+    <div class="setup card">
+      <div class="side-title">Speed property</div>
+      <label class="field">Detected
+        <select id="s-cand"></select>
+      </label>
+      <label class="field">Keyframe time base
+        <select id="s-timebase">
+          <option value="start">Clip start (timeline time)</option>
+          <option value="inpoint">Source in-point (media time)</option>
+        </select>
+      </label>
+      <div class="help">If the amber cursor doesn't line up with your keyframes in Premiere's timeline, switch the time base.</div>
+      <label class="field">Speed unit
+        <select id="s-unit">
+          <option value="auto">Auto-detect</option>
+          <option value="percent">Percent (100 = normal)</option>
+          <option value="factor">Factor (1 = normal)</option>
+        </select>
+      </label>
+      <div class="help" id="s-unit-note"></div>
+      <div class="row-btns">
+        <button id="s-diag">Run diagnostics</button>
+        <button id="s-copy">Copy report</button>
+        <button id="s-reset" class="danger">Reset speed to 100%</button>
+      </div>
+      <textarea id="s-out" readonly placeholder="Diagnostics lists what Premiere exposes for the selected clip — send it along if something doesn't work."></textarea>
+    </div>
+  </section>
+
+  <footer id="foot">
+    <span id="status"><span class="led"></span><span id="status-text">Ready</span></span>
+    <span id="hints" class="hints"></span>
+  </footer>
+</div>
+<script src="js/easing.js"></script>
+<script src="js/bake.js"></script>
+<script src="js/speed.js"></script>
+<script src="js/host.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

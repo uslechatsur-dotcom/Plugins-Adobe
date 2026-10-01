@@ -5,3 +5,8 @@ curve-editor/dist/
 curve-editor/release/
 installer/payload/plugin.ccx
 installer/rsrc_windows_amd64.syso
+speed-editor/src/shared.css
+speed-editor/src/js/easing.js
+speed-editor/src/js/bake.js
+speed-editor/dist/
+speed-editor/release/

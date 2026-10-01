@@ -1,0 +1,56 @@
+SPEED CURVES v__VERSION__ — éditeur de courbes de vitesse (Time Remapping) pour Adobe Premiere Pro
+==================================================================================================
+
+Modifiez les keyframes de vitesse d'un clip avec un vrai graphe de courbes. Le curseur du panneau
+suit en temps réel la tête de lecture de la timeline Premiere (et inversement : glissez la règle
+du panneau pour déplacer la tête de lecture de Premiere).
+
+INSTALLATION (Windows, sans script — « Contrôle intelligent des applications » bloque les .bat)
+-----------------------------------------------------------------------------------------------
+1. Fermez Premiere Pro. Décompressez le zip.
+2. Touches Windows+R, tapez  %APPDATA%\Adobe\CEP\extensions  puis Entrée.
+   (Si le dossier n'existe pas : ouvrez %APPDATA%\Adobe, créez CEP, dedans extensions.)
+3. Copiez-y le dossier  extension-CEP\com.speedcurves.editor  (le dossier lui-même).
+   Mise à jour : remplacez l'ancien dossier du même nom.
+4. Autorisez les extensions non signées (une seule fois, déjà fait si Legolas+ Curves est installé) :
+   a) double-clic sur  enable-cep-windows.reg  > Oui > OK ;
+   b) ou dans PowerShell :
+      foreach($v in 9..12){ New-Item "HKCU:\Software\Adobe\CSXS.$v" -Force | Out-Null; New-ItemProperty "HKCU:\Software\Adobe\CSXS.$v" -Name PlayerDebugMode -Value "1" -PropertyType String -Force | Out-Null }
+5. Redémarrez Premiere : Fenêtre > Extensions > Speed Curves.
+
+macOS : double-clic sur install-mac.command (clic droit > Ouvrir si refusé).
+
+UTILISATION
+-----------
+1. Cliquez un clip VIDÉO dans la timeline (le panneau suit votre sélection ; sans sélection il prend
+   le clip sous la tête de lecture).
+2. Onglet Speed :
+   - haut : la courbe de VITESSE (100 % = normal, 0 % = arrêt, négatif = lecture inversée) ;
+     vert = plus rapide que normal, orange = ralenti. Glissez les keyframes (Alt : vitesse seule,
+     Ctrl : temps seul), double-clic = ajouter, Suppr = supprimer, flèches = ajuster.
+   - bas : le TEMPS SOURCE (ce que vous voyez à l'écran) — l'intégrale de la vitesse.
+   - barre du haut : « Speed / Source / Clip » = valeurs sous le curseur, en direct.
+   - presets d'accélération/décélération en bas (Ease, Cubic, Expo, Back…) sur le segment choisi.
+   - « Match original source » garde le point de sortie source du clip après vos modifications.
+3. Onglet Keyframes : saisie exacte (image, vitesse %, courbe de chaque segment).
+4. Onglet Ramps : Hero time, Speed burst, Ramp to speed, Freeze frame, Beat pulse, Rewind — appliqués
+   à la position du curseur.
+5. Onglet Setup : propriété détectée, base de temps, unité, DIAGNOSTIC, remise à 100 %.
+
+SI ÇA NE MARCHE PAS
+-------------------
+- « Speed property not found » : dans Premiere, clic droit sur le badge fx du clip > Remappage temporel
+  > Vitesse (ou Ctrl+clic sur la ligne de vitesse pour poser un premier keyframe), puis ↻.
+- Le curseur ambre ne tombe pas sur vos keyframes : Setup > « Keyframe time base » > l'autre choix.
+- Les valeurs semblent 100 fois trop petites/grandes : Setup > « Speed unit ».
+- Sinon : Setup > « Run diagnostics » > « Copy report » et envoyez le texte.
+
+À SAVOIR
+- Premiere ne permet pas de régler les poignées bézier par script : les courbes sont écrites en
+  keyframes de vitesse linéaires denses (réduits automatiquement).
+- Changer la vitesse change la durée de média consommée ; la durée du clip dans la timeline peut être
+  ajustée par Premiere. Utilisez « Match original source » pour garder le même point de sortie.
+- Cette version n'a pas encore été testée dans un vrai Premiere Pro : l'accès au Remappage temporel par
+  script n'est pas documenté publiquement. Le diagnostic est là pour ajuster rapidement.
+
+DÉSINSTALLATION : supprimez le dossier com.speedcurves.editor de ...\CEP\extensions
